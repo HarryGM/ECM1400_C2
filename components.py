@@ -74,13 +74,16 @@ def check_outflanks(board, position, colour):
     x = position[0]
     y = position[1]
 
+    # Determine opposing colour
     if colour == "Light":
         opposing_colour = "Dark "
     else:
         opposing_colour = "Light"
-
+    
+    # Define directions of movement 
     directions = [(1, 0), (0, 1), (-1, 0), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1)]
 
+    # Check each direction individually until a correct one is found
     for direction in directions:
         direction_supports_move = check_adjacent(board, position, direction, colour, opposing_colour)
         if direction_supports_move:
@@ -91,14 +94,17 @@ def check_outflanks(board, position, colour):
 def legal_move(board, position, colour):
     x = position[0]
     y = position[1]
+    
+    # Reformat colour to match board
+    colour += " "
 
     # Check position is unoccupied
     if board[x][y] == "None":
         return False
 
-    # Check position outflanks
-    if check_outflanks(board, position, colour):
-        return True
+    # Check if position outflanks
+    if not check_outflanks(board, position, colour):
+        return False
 
-    return False
+    return True
 
