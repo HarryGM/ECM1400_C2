@@ -28,3 +28,77 @@ def print_board(board):
             print(element, end = " ")
         print("\n")
 
+def check_match_in_direction(board, position, direction, colour, opposing_colour):
+    x = position[0]
+    y = position[1]
+
+    # Check if moving one further and check if this takes you off the board
+    if x + direction[0] > len(board) - 1 or x + direction[0] < 0:
+        return False 
+    if y + direction[1] > len(board)- 1 or y + direction[1] < 0:
+        return False
+
+    # Check if current postion is same colour to see if we outflank
+    if board[x][y] != colour:
+        new_pos = (x + direction[0], y + direction[1])
+        check_match_in_direction(board, new_pos, direction, colour, opposing_colour)
+    else:
+        return True
+
+
+def check_adjacent(board, position, direction, colour, opposing_colour):
+    x = position[0]
+    y = position[1]
+
+    # Check if move takes you off the board
+    if x + direction[0] > len(board) - 1 or x + direction[0] < 0:
+        return False
+    if y + direction[1] > len(board) - 1 or y + direction[1] < 0:
+        return False
+
+    # Check if next stone along this direction is opposing in colour
+    if board[x + direction[0]][y + direction[1]] != opposing_colour:
+        return False
+
+    # Check if moving one further and check if this takes you off the board
+    if x + (2 * direction[0]) > len(board) - 1 or x + (2 * direction[0]) < 0:
+        return False 
+    if y + (2 * direction[1]) > len(board) - 1 or y + (2 * direction[1]) < 0:
+        return False
+
+    # Check for a match along the line
+    new_pos = (x + (2 * direction[0]), y + (2 * direction[1]))
+    return check_match_in_direction(board, new_pos, direction, colour, opposing_colour)
+
+def check_outflanks(board, position, colour):
+    x = position[0]
+    y = position[1]
+
+    if colour == "Light":
+        opposing_colour = "Dark "
+    else:
+        opposing_colour = "Light"
+
+    directions = [(1, 0), (0, 1), (-1, 0), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1)]
+
+    for direction in directions:
+        direction_supports_move = check_adjacent(board, position, direction, colour, opposing_colour)
+        if direction_supports_move:
+            return True
+
+    return False
+
+def legal_move(board, position, colour):
+    x = position[0]
+    y = position[1]
+
+    # Check position is unoccupied
+    if board[x][y] == "None":
+        return False
+
+    # Check position outflanks
+    if check_outflanks(board, position, colour):
+        return True
+
+    return False
+
