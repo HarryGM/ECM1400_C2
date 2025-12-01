@@ -39,7 +39,7 @@ def check_match_in_direction(board, position, direction, colour, opposing_colour
         return False
 
     # Check if current postion is same colour to see if we outflank
-    if board[x][y] != colour:
+    if board[y][x] != colour:
         new_pos = (x + direction[0], y + direction[1])
         check_match_in_direction(board, new_pos, direction, colour, opposing_colour)
     else:
@@ -57,7 +57,7 @@ def check_adjacent(board, position, direction, colour, opposing_colour):
         return False
 
     # Check if next stone along this direction is opposing in colour
-    if board[x + direction[0]][y + direction[1]] != opposing_colour:
+    if board[y + direction[1]][x + direction[0]] != opposing_colour:
         return False
 
     # Check if moving one further and check if this takes you off the board
@@ -87,24 +87,19 @@ def check_outflanks(board, position, colour):
     for direction in directions:
         direction_supports_move = check_adjacent(board, position, direction, colour, opposing_colour)
         if direction_supports_move:
-            return True
+            # Return direction for later use in game_engine.py(changing outflanked stones)
+            return True, direction
 
-    return False
+    return False, None
 
 def legal_move(board, position, colour):
     x = position[0]
     y = position[1]
     
-    # Reformat colour to match board
-    colour += " "
-
     # Check position is unoccupied
-    if board[x][y] == "None":
+    if board[y][x] == "None":
         return False
 
     # Check if position outflanks
-    if not check_outflanks(board, position, colour):
-        return False
-
-    return True
+    return check_outflanks(board, position, colour)[0]
 
