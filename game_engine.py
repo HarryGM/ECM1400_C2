@@ -48,6 +48,8 @@ def simple_game_loop():
     print("Welcome to Othello\n")
 
     board = initialise_board()
+    # print initial board
+    print_board(board)
     game_over = False
     move_counter = 60
     current_player = "Dark "
@@ -95,7 +97,8 @@ def simple_game_loop():
     else:
         print(f"Draw, Dark: {num_dark_stones}, Light: {num_light_stones}")
 
-
+if __name__ == "__main__":
+    simple_game_loop()
 
 
 
