@@ -72,8 +72,10 @@ def simple_game_loop():
             board[move[1]][move[0]] = current_player
 
             # Change outflanked stones
-            direction = check_outflanks(board, move, current_player)[1]
-            change_outflanked_stones(board, move, current_player, direction)
+            valid_directions = check_outflanks(board, move, current_player)[1]
+            for direction in valid_directions:
+                change_outflanked_stones(board, move, current_player, direction)
+
             move_counter -= 1
             current_player = swap_player(current_player)
             
