@@ -38,16 +38,25 @@
             border-radius: 50%;
         }
         .black {
-            background: #222;
+            background: #7d0013;
         }
         .white {
-            background: #fff;
+            background: #f7599e;
             border: 1px solid #222;
         }
-        .load_save_button {
+        .load_button {
             width: 100px;
-            height: 50px;
-            border-radius: 5%:
+            height: 25px;
+            border-radius: 5%;
+        }
+        .save_button {
+            width: 100px;
+            height: 25px;
+            border-radius: 5%;
+            margin-bottom: 10px;
+        }
+        .file_picker {
+            margin-top: 10px;
         }
         #messageBox{
             height: 10em; /* Adjust as needed */
@@ -171,6 +180,15 @@
 </head>
 <body>
     <h1 style="text-align:center;">Othello/Reversi Game</h1>
+    <div>
+        <button class="save_button"; id="save_button">Save Game</button> 
+    <div>
+        <button class="load_button"; id="load_button">Load Game</button>
+    </div>
+    <div>
+        <label for="load_game_file">Select a file to load:</label>
+        <input type="file"; accept=".json"; id="load_game_file"; class="file_picker"/>
+    </div>
     <div class="container">
         <div class="board_grid">
             {% for i in range(game_board|length) %}
@@ -188,10 +206,5 @@
     </div>
     <div id="messageBox" style="width: 80%; height: 10vh; border: 1px solid black; padding: 10px; overflow-y: auto;">
         <h2>Game Log:</h2>
-    </div>
-    <div>
-        <button class="load_save_button"; id="load_button">Load Game</button>
-        <input type="file"; accept=".json"; id="load_game_file"  />
-        <button class="load_save_button"; id="save_button">Save Game</button>
     </div>
 </body></html>

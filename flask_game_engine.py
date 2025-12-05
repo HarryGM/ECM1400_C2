@@ -51,7 +51,7 @@ def check_score(board):
         winner = "Draw"
     return winner, num_dark_stones, num_light_stones
 
-board = initialise_board(4)
+board = initialise_board()
 
 # Define data for response object
 data = {
@@ -126,14 +126,6 @@ def move():
     board = data["board"]
     data["status"] = "success"
 
-   # if not any_legal_moves(board, current_player):
-   #     data["status"] = "fail"
-    #    data["message"] = f"No legal moves for {current_player}"
-     #   current_player = swap_player(current_player)
-      #  if not any_legal_moves(board, current_player):
-       #     data["finished"] = "Game is over"
-        #    return jsonify(data)
-
     if legal_move(board, (x, y), current_player):
         data["status"] = "success"
         board[y][x] = current_player
@@ -166,7 +158,7 @@ def move():
 
             current_player = "Dark "
             move_count = 60
-            board = initialise_board(4)
+            board = initialise_board()
 
     # Check if move count has expired
     if move_count == 0:
