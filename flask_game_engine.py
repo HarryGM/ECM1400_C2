@@ -1,5 +1,9 @@
+import os
+import json
+
 from flask import Flask, render_template, request, jsonify
 from components import *
+
 
 # Define some useful functions from game_engine.py
 def swap_player(current_player):
@@ -63,6 +67,55 @@ app = Flask(__name__)
 @app.route("/")
 def index():
     return render_template("index.html", game_board = board)
+
+@app.route("/save", methods = ["POST"])
+def save():
+    save_data = request.get_json()
+    save_dir = "othello_saves"
+    files_in_dir = 0
+
+    save_data["player"] = data["player"]
+    save_data["move_count"] = data["move_count"]
+
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    for path in os.listdir(save_dir):
+        # check if current path is a file
+        if os.path.isfile(os.path.join(save_dir, path)):
+            files_in_dir += 1
+    try:
+        with open(f"{save_dir}/save_{files_in_dir + 1}.json", "x") as f:
+            try:
+                json.dump(save_data, f)
+                return "success"
+            except:
+                return "failed to write to the file"
+    except:
+        return "failed to open file"
+
+@app.route("/load", methods = ["POST"])
+def load():
+    load_data_loc = request.get_json()
+    save_dir = "othello_saves"
+
+    # retrieve save data
+    with open(f"{save_dir}/{load_data_loc["file_name"]}", "r") as f:
+        load_data = json.load(f)
+
+    # Set variables for use in backend
+    data["board"] = load_data["board"]
+    data["player"] = load_data["player"]
+    data["move_count"] = load_data["move_count"]
+
+    # set response data to change board
+    response_data = {
+        "board": load_data["board"],
+        "player": load_data["player"],
+        "move_count": load_data["move_count"]
+                     }
+
+    return jsonify(response_data)
 
 @app.route("/move", methods = ["GET"])
 def move():
@@ -135,7 +188,6 @@ def move():
     data["move_count"] = move_count
 
     return jsonify(data)
-
 
 if __name__ == "__main__":
     app.run()

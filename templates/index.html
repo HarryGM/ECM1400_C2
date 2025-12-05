@@ -44,6 +44,11 @@
             background: #fff;
             border: 1px solid #222;
         }
+        .load_save_button {
+            width: 100px;
+            height: 50px;
+            border-radius: 5%:
+        }
         #messageBox{
             height: 10em; /* Adjust as needed */
             overflow-y: auto; /* Enable vertical scrolling */
@@ -57,11 +62,48 @@
         //console.log(board);
 
         // Load the grid format once the page has loaded
-
-
         document.addEventListener('DOMContentLoaded', function() {
             loadBoard();
         }, false);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById("load_button").onclick = function() {
+                file = document.getElementById("load_game_file").files[0];
+                
+                data = {
+                    "file_name": file.name
+                };
+
+                fetch("/load", {
+                    method: 'POST',
+                    headers: {'Content-Type': "application/json"},
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    board = data["board"];
+                    loadBoard();
+                    updateMessageBox("Save Loaded: move counter: " + data["move_count"])
+                    updateMessageBox("it's " + data["player"] + "'s turn")
+                });
+            };
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById("save_button").onclick = function() {
+                data = {
+                    "board": board,
+                    "player": null,
+                    "move_count": null
+                };
+
+                fetch("/save", {
+                    method: "POST",
+                    headers: {'Content-Type': "application/json"},
+                    body: JSON.stringify(data),
+                });
+            };
+        });
 
         function sendMove(x, y, url) {
             /**
@@ -91,8 +133,9 @@
                     //Update the board
                     board = data['board'];
                     //Reload the board
-                    loadBoard();        
+                    loadBoard();
                     document.getElementById('messageBox').innerHTML = data['finished'].toString();
+                    updateMessageBox("END");
                     alert(data['finished'].toString());
                 }
             })
@@ -146,5 +189,9 @@
     <div id="messageBox" style="width: 80%; height: 10vh; border: 1px solid black; padding: 10px; overflow-y: auto;">
         <h2>Game Log:</h2>
     </div>
-
+    <div>
+        <button class="load_save_button"; id="load_button">Load Game</button>
+        <input type="file"; accept=".json"; id="load_game_file"  />
+        <button class="load_save_button"; id="save_button">Save Game</button>
+    </div>
 </body></html>
