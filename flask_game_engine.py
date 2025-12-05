@@ -15,7 +15,7 @@ def change_outflanked_stones(board, move, current_player, direction):
     
     new_pos = (x + direction[0], y + direction[1])
 
-    if (board[new_pos[1]][new_pos[0]] != current_player):
+    if board[new_pos[1]][new_pos[0]] != current_player:
         board[new_pos[1]][new_pos[0]] = current_player
         change_outflanked_stones(board, new_pos, current_player, direction)
     else:
@@ -28,17 +28,30 @@ def any_legal_moves(board, current_player):
             if legal_move(board, (x, y), current_player):
                 move_available = True
                 break
-        else:
-            continue
-        break
 
     return move_available
+
+def check_score(board):
+    num_dark_stones = 0
+    num_light_stones = 0
+
+    for row in board:
+        num_dark_stones += row.count("Dark ")
+        num_light_stones += row.count("Light")
+
+    if num_dark_stones > num_light_stones:
+        winner = "Dark "
+    elif num_light_stones >  num_dark_stones:
+        winner = "Light"
+    else:
+        winner = "Draw"
+    return winner, num_dark_stones, num_light_stones
 
 board = initialise_board(4)
 
 # Define data for response object
 data = {
-    "board" : None,
+    "board" : board,
     "status" : None,
     "player" : "Dark ",
     "finished" : None,
@@ -57,18 +70,16 @@ def move():
     y = int(request.args.get("y")) - 1
     current_player = data["player"]
     move_count = data["move_count"]
+    board = data["board"]
     data["status"] = "success"
 
-    if not any_legal_moves(board, current_player):
-        data["player"] = current_player
-        data["status"] = "fail"
-        data["message"] = f"No legal moves for {current_player}"
-        current_player = swap_player(current_player)
-        if not any_legal_moves(board, current_player):
-            data["finished"] = "Game is over"
-            data["player"] = "Dark "
-            data["board"] = initialise_board()
-            return jsonify(data)
+   # if not any_legal_moves(board, current_player):
+   #     data["status"] = "fail"
+    #    data["message"] = f"No legal moves for {current_player}"
+     #   current_player = swap_player(current_player)
+      #  if not any_legal_moves(board, current_player):
+       #     data["finished"] = "Game is over"
+        #    return jsonify(data)
 
     if legal_move(board, (x, y), current_player):
         data["status"] = "success"
@@ -76,7 +87,6 @@ def move():
 
         # Change outflanked stones
         valid_directions = check_outflanks(board, (x, y), current_player)[1]
-        print(valid_directions)
         for direction in valid_directions:
             change_outflanked_stones(board, (x, y), current_player, direction)
 
@@ -85,6 +95,40 @@ def move():
     else:
         data["status"] = "fail"
         data["message"] = "illegal move"
+
+    # Check if the next player has any legal moves
+    if not any_legal_moves(board, current_player):
+        current_player = swap_player(current_player)
+        print(current_player)
+        # Check if the other player has any legal moves
+        if not any_legal_moves(board, current_player):
+            data["status"] = "game over"
+
+            # Determine game over output
+            winner, num_dark_stones, num_light_stones = check_score(board)
+            if winner == "Draw":
+                data["finished"] = f"Draw, {num_dark_stones} each"
+            else:
+                data["finished"] = f"{winner} won, Dark: {num_dark_stones}, Light: {num_light_stones}"
+
+            current_player = "Dark "
+            move_count = 60
+            board = initialise_board(4)
+
+    # Check if move count has expired
+    if move_count == 0:
+        data["status"] = "game over"
+
+        # Determine game over output
+        winner, num_dark_stones, num_light_stones = check_score(board)
+        if winner == "Draw":
+            data["finished"] = f"Draw, {num_dark_stones} each"
+        else:
+            data["finished"] = f"{winner} won, Dark: {num_dark_stones}, Light: {num_light_stones}"
+
+        current_player = "Dark "
+        move_count = 60
+        board = initialise_board(4)
 
     data["board"] = board
     data["player"] = current_player

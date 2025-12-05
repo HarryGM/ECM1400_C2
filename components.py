@@ -32,18 +32,20 @@ def check_match_in_direction(board, position, direction, colour, opposing_colour
     x = position[0]
     y = position[1]
 
+    if board[y][x] == colour:
+        return True
+
     # Check if moving one further and check if this takes you off the board, direction is less than -1 to account for case where stone is at the edge of the board 
-    if x + direction[0] > len(board) - 1 or x + direction[0] < -1:
+    if x + direction[0] > len(board) - 1 or x + direction[0] < 0:
         return False
-    if y + direction[1] > len(board) - 1 or y + direction[1] < -1:
+    if y + direction[1] > len(board) - 1 or y + direction[1] < 0:
+        return False
+    
+    if board[y][x] == "None ":
         return False
 
-    # Check if current postion is same colour to see if we outflank
-    if board[y][x] != colour:
-        new_pos = (x + direction[0], y + direction[1])
-        return check_match_in_direction(board, new_pos, direction, colour, opposing_colour)
-    else:
-        return True
+    new_pos = (x + direction[0], y + direction[1])
+    return check_match_in_direction(board, new_pos, direction, colour, opposing_colour)
 
 
 def check_adjacent(board, position, direction, colour, opposing_colour):
@@ -81,7 +83,6 @@ def check_outflanks(board, position, colour):
         opposing_colour = "Light"
 
     # Define directions of movement 
-
     directions = [(1, 0), (0, 1), (-1, 0), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1)]
     valid_directions = []
 

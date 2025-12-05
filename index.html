@@ -75,6 +75,8 @@
             .then(response => response.json())
             .then(data => {
                 //Process the response
+                console.log(data["finished"])
+
                 if (data['status'] === 'success'){
                     updateMessageBox('Move accepted at (' + x + ', ' + y + ')');
                     updateMessageBox("It's " + data['player'] + "'s turn.");
@@ -91,8 +93,9 @@
                     //Update the board
                     board = data['board'];
                     //Reload the board
-                    loadBoard();        
+                    loadBoard();
                     document.getElementById('messageBox').innerHTML = data['finished'].toString();
+                    updateMessageBox("END");
                     alert(data['finished'].toString());
                 }
             })
