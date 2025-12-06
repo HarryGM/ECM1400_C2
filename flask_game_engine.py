@@ -126,19 +126,58 @@ def load():
 def bot():
     if data["player"] == "Light":
         board = data["board"]
+        data["finished"] = None
+        current_player = data["player"]
+        move_count = data["move_count"]
         x, y = predict_move(board, "Light")
+
         board[y][x] = "Light"
         valid_directions = check_outflanks(board, (x, y), "Light")[1]
         for direction in valid_directions:
             change_outflanked_stones(board, (x, y), "Light", direction)
+        move_count -= 1
+
+        # Check if the next player has any legal moves
+        if not any_legal_moves(board, swap_player(current_player)):
+            current_player = swap_player(current_player)
+            # Check if the other player has any legal moves
+            if not any_legal_moves(board, current_player):
+                data["status"] = "game over"
+                print("TEST")
+                # Determine game over output
+                winner, num_dark_stones, num_light_stones = check_score(board)
+                if winner == "Draw":
+                    data["finished"] = f"Draw, {num_dark_stones} each"
+                else:
+                    data["finished"] = f"{winner} won, Dark: {num_dark_stones}, Light: {num_light_stones}"
+
+                current_player = "Dark "
+                move_count = 60
+                board = initialise_board(4)
+    
+        # Check if move count has expired
+        if move_count == 0:
+            data["status"] = "game over"
+
+            # Determine game over output
+            winner, num_dark_stones, num_light_stones = check_score(board)
+            if winner == "Draw":
+                data["finished"] = f"Draw, {num_dark_stones} each"
+            else:
+                data["finished"] = f"{winner} won, Dark: {num_dark_stones}, Light: {num_light_stones}"
+
+            current_player = "Dark "
+            move_count = 60
+            board = initialise_board(4)
 
         data["board"] = board
+        data["move_count"] = move_count
         data["player"] = "Dark "
         data["bot_move"] = (x, y)
 
         return jsonify(data)
     else:
-        return "No legal Moves"
+        return "No legal moves"
 
 # Move route
 @app.route("/move", methods = ["GET"])
@@ -149,6 +188,7 @@ def move():
     move_count = data["move_count"]
     board = data["board"]
     data["status"] = "success"
+    data["finished"] = None
 
     if legal_move(board, (x, y), current_player):
         data["status"] = "success"
@@ -168,11 +208,9 @@ def move():
     # Check if the next player has any legal moves
     if not any_legal_moves(board, current_player):
         current_player = swap_player(current_player)
-        print(current_player)
         # Check if the other player has any legal moves
         if not any_legal_moves(board, current_player):
             data["status"] = "game over"
-            print("TEST")
             # Determine game over output
             winner, num_dark_stones, num_light_stones = check_score(board)
             if winner == "Draw":
@@ -182,7 +220,7 @@ def move():
 
             current_player = "Dark "
             move_count = 60
-            board = initialise_board()
+            board = initialise_board(4)
 
     # Check if move count has expired
     if move_count == 0:

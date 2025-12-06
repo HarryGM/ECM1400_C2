@@ -140,6 +140,17 @@
                 loadBoard();
                 updateMessageBox('Bot plays at (' + move[0] + ', ' + move[1] + ')');
                 updateMessageBox("It's " + data['player'] + "'s turn.");
+
+                if (data['finished']){
+                    //Game is finished
+                    //Update the board
+                    board = data['board'];
+                    //Reload the board
+                    loadBoard();
+                    document.getElementById('messageBox').innerHTML = data['finished'].toString();
+                    updateMessageBox("END");
+                    alert(data['finished'].toString())
+                }
             })
             .catch((error) => {
                 console.error('Error:', error);
@@ -177,8 +188,8 @@
                     board = data['board'];
                     //Reload the board
                     loadBoard();
-                    //document.getElementById('messageBox').innerHTML = data['finished'].toString();
-                    //updateMessageBox("END");
+                    document.getElementById('messageBox').innerHTML = data['finished'].toString();
+                    updateMessageBox("END");
                     alert(data['finished'].toString())
                 }
             })
