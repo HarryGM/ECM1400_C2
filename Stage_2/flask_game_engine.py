@@ -3,7 +3,7 @@ import json
 
 from flask import Flask, render_template, request, jsonify
 from components import *
-from othello_opponent import predict_move
+
 
 # Define some useful functions from game_engine.py
 def swap_player(current_player):
@@ -51,7 +51,7 @@ def check_score(board):
         winner = "Draw"
     return winner, num_dark_stones, num_light_stones
 
-board = initialise_board(4)
+board = initialise_board()
 
 # Define data for response object
 data = {
@@ -59,18 +59,15 @@ data = {
     "status" : None,
     "player" : "Dark ",
     "finished" : None,
-    "move_count" : 60,
-    "bot_move": None
+    "move_count" : 60
 }
 
 app = Flask(__name__)
 
-# Render template
 @app.route("/")
 def index():
     return render_template("index.html", game_board = board)
 
-# Save route
 @app.route("/save", methods = ["POST"])
 def save():
     save_data = request.get_json()
@@ -97,7 +94,6 @@ def save():
     except:
         return "failed to open file"
 
-# Load route
 @app.route("/load", methods = ["POST"])
 def load():
     load_data_loc = request.get_json()
@@ -121,26 +117,6 @@ def load():
 
     return jsonify(response_data)
 
-# Bot route
-@app.route("/bot", methods = ["GET"])
-def bot():
-    if data["player"] == "Light":
-        board = data["board"]
-        x, y = predict_move(board, "Light")
-        board[y][x] = "Light"
-        valid_directions = check_outflanks(board, (x, y), "Light")[1]
-        for direction in valid_directions:
-            change_outflanked_stones(board, (x, y), "Light", direction)
-
-        data["board"] = board
-        data["player"] = "Dark "
-        data["bot_move"] = (x, y)
-
-        return jsonify(data)
-    else:
-        return "No legal Moves"
-
-# Move route
 @app.route("/move", methods = ["GET"])
 def move():
     x = int(request.args.get("x")) - 1
@@ -172,7 +148,7 @@ def move():
         # Check if the other player has any legal moves
         if not any_legal_moves(board, current_player):
             data["status"] = "game over"
-            print("TEST")
+
             # Determine game over output
             winner, num_dark_stones, num_light_stones = check_score(board)
             if winner == "Draw":

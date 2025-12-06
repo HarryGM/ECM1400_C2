@@ -114,38 +114,6 @@
             };
         });
 
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById("bot_button").onclick = function() {
-                fetch("/bot", {
-                    method: 'GET',
-                })
-                .then(response => response.json())
-                .then(data => {
-                    board = data["board"];
-                    move = data["move"];
-                    loadBoard();
-                });
-            };
-        });
-
-        function botMove() {
-            fetch("/bot", {
-                method: 'GET',
-            })
-            .then(response => response.json())
-            .then(data => {
-                board = data["board"];
-                move = data["bot_move"];
-                console.log(move[0])
-                loadBoard();
-                updateMessageBox('Bot plays at (' + move[0] + ', ' + move[1] + ')');
-                updateMessageBox("It's " + data['player'] + "'s turn.");
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-        };
-
         function sendMove(x, y, url) {
             /**
             * do a GET request to the server with the x and y coordinates for the move
@@ -163,23 +131,21 @@
                     updateMessageBox("It's " + data['player'] + "'s turn.");
                     //Update the board
                     board = data['board'];
-
+                    
                     //Reload the board
-                    loadBoard();
-
-                    // Play bot move
-                    setTimeout(botMove, 500)}
+                    loadBoard();}          
                 else if (data['status'] === 'fail'){
                     updateMessageBox('Invalid move at (' + x + ', ' + y + '): ' + data['message']);}
+                
                 else if (data['finished']){
                     //Game is finished
                     //Update the board
                     board = data['board'];
                     //Reload the board
                     loadBoard();
-                    //document.getElementById('messageBox').innerHTML = data['finished'].toString();
-                    //updateMessageBox("END");
-                    alert(data['finished'].toString())
+                    document.getElementById('messageBox').innerHTML = data['finished'].toString();
+                    updateMessageBox("END");
+                    alert(data['finished'].toString());
                 }
             })
             .catch((error) => {
@@ -222,9 +188,6 @@
     <div>
         <label for="load_game_file">Select a file to load:</label>
         <input type="file"; accept=".json"; id="load_game_file"; class="file_picker"/>
-    </div>
-    <div>
-        <button class=load_button; id="bot_button">Get bot move</button>
     </div>
     <div class="container">
         <div class="board_grid">
