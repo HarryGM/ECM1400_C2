@@ -9,15 +9,24 @@
             ```
         <p>This will start a flask server, in your terminal emulator there will be a url to where it is locally hosted, navigate to the webpage at that url to use the program</p>
     <h2>Flow charts of key algorithms used</h2>
-        <p>This section will go through each module and give a flow chart for every important algorithm used</p>
+        <p>This section will go through each module and give a flow chart for important algorithms used</p>
         <h3>components.py</h3>
             <h4>Initialise board</h4>
                 <img src="images/Initialise_board.drawio.png">
             <h4>Check for legal move</h4>
                 <img src="images/Legal_move.drawio.png">
         <h3>flask_game_engine.py</h3>
+            <h4>Change outflanked stones</h4>
+                <img src="images/change_outflanked_stones.drawio.png">
+            <h4>Save game</h4>
+                <img src="images/Save.drawio.png">
+            <h4>Load game</h4>
+                <img src="images/Load.drawio.png">
         <h3>othello_bot.py</h3>
-        <img src="images/othello_bot.drawio.png">
+            <h4>Get all legal moves</h4>
+                <img src="images/All_legal_moves.drawio.png">
+            <h4>Predict move</h4>
+                <img src="images/othello_bot.drawio.png">
     <h2>Explanation of modules</h2>
         <h3>components.py</h3>
             <p>
