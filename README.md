@@ -2,13 +2,14 @@
     <h2>How to run</h2>
         <p>
         Navigate to Stage_3 directory, enable a virtual environment(If not exists create a virtual environment, detailed in manual.doc),
-        run
         </p>
-            '''
+        <p>run</p>
+            ```
             python flask_game_engine.py
-            '''
+            ```
         <p>This will start a flask server, in your terminal emulator there will be a url to where it is locally hosted, navigate to the webpage at that url to use the program</p>
     <h2>Explanation of algorithms used</h2>
+    <img src="images/othello_bot.drawio.png">
     <h2>Explanation of modules</h2>
         <h3>components.py</h3>
             <p>
@@ -63,6 +64,48 @@
                 <li>Added a bot function which is called from within the sendMove function and executes the functions at the bot route in flask_game_engine.py and applies some basic functionality in index.html</li>
             </ul>
     <h2>Reasoning behind choices made</h2>
-
+        <p>This section will go through each module and detail key design choices made and their rationale</p>
+        <h3>components.py</h3>
+            <p>
+            Firstly, within the initialise_board function
+            I decided to generalise the size of the board when filling it with its default values,
+            this was achieved using integer division to determine the middle 4 points(where applicable) for a general size,
+            I chose to do this for testing purposes as being able to restrict the boards size can help with testing game end conditions, cases at the edge of the board etc..
+            </p>
+            <p>
+            Lastly, when determining the legality of a move I split this into a series of helper functions which link together in a chain like fashion,
+            This was primarily done for the sake of modularity as I felt each function was distinct enough from the others to warrant a seperate helper function for clarity,
+            also due to the recursive nature of the check_match_in_direction function some level of seperation was necessary.
+            Additionally I decided on a recursive method for checking whether a move outflanks any other, I check whether it outflanks recursively in all possible directions,
+            my reasoning for this is that the number of iterations is variable and a recursive method can ascertain the correct number of recursions independently making it an apt solution.
+            </p>
+        <h3>flask_game_engine.py</h3>
+            <p>
+            Firstly, within the change_outflanked_stones function I used a recursive method for reasons similar to the above
+            </p>
+            <p>
+            Secondly, I made the decision to use a globally defined dictionary called data,
+            this interfaced with essentially all functions within this module and acted as a response body for the bot and move routes.
+            I decided to do it this way to connect all my functions together in a sense so that there are no issues with changing a variable in one function and not another,
+            also this allowed me to easily interface with the flask template as the data structure used for all functions also acted as a response body.
+            Additionally I was able to easily pass elements to the frontend by simply adding additional entries to my data dictionary.
+            </p>
+            <p>
+            Thirdly, I decided to implement seperate routes for load, save, bot and move, this aided modularity and clarity in my solution and allowed me to bind seperate functionality to different processes,
+            for example binding the save/load buttons to html button click events or binding move to the event of players clicking a cell
+            </p>
+            <p>
+            Finally, for save functionallity I decided to use the os standard library to create a specific directory local to the project for saves to be stored,
+            this allowed me to when loading data look in a specific directory for my save files simplifying the loading process and cleaning up file structure in the project files,
+            (by not having save files mixed with program files). Additionally I used an html file element to allow the user to select the save file making for easy selection of saves.
+            </p>
+        <h3>othello_opponent.py</h3>
+            <p>
+            When designing my bot I thought about a number of strategies which may be effective in the game of othello eg:
+            maximising stones captured, prioritising certain kinds of captures(ie: diagonals, horizontals or verticals), etc..., 
+            but in the end I decided to minimise the number of potential moves my opponent has on the following turn.
+            My thinking was that by minimising their possible moves it is more likely to eliminate all moves for the opponent on any given turn
+            giving the bot multiple consecutive turns.
+            </p>
 
 
