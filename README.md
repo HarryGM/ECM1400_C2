@@ -8,8 +8,16 @@
             python flask_game_engine.py
             ```
         <p>This will start a flask server, in your terminal emulator there will be a url to where it is locally hosted, navigate to the webpage at that url to use the program</p>
-    <h2>Explanation of algorithms used</h2>
-    <img src="images/othello_bot.drawio.png">
+    <h2>Flow charts of key algorithms used</h2>
+        <p>This section will go through each module and give a flow chart for every important algorithm used</p>
+        <h3>components.py</h3>
+            <h4>Initialise board</h4>
+                <img src="images/Initialise_board.drawio.png">
+            <h4>Check for legal move</h4>
+                <img src="images/Legal_move.drawio.png">
+        <h3>flask_game_engine.py</h3>
+        <h3>othello_bot.py</h3>
+        <img src="images/othello_bot.drawio.png">
     <h2>Explanation of modules</h2>
         <h3>components.py</h3>
             <p>
@@ -63,7 +71,7 @@
                 <li>Added functions bound to both save and load buttons which execute the functions at the routes in flask_game_engine.py and apply some basic functionality in the index.html file<li>
                 <li>Added a bot function which is called from within the sendMove function and executes the functions at the bot route in flask_game_engine.py and applies some basic functionality in index.html</li>
             </ul>
-    <h2>Reasoning behind choices made</h2>
+    <h2>Reasoning behind design choices made</h2>
         <p>This section will go through each module and detail key design choices made and their rationale</p>
         <h3>components.py</h3>
             <p>
