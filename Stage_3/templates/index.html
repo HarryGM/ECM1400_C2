@@ -74,7 +74,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadBoard();
         }, false);
-        
+
         // Handle game loading
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById("load_button").onclick = function() {
@@ -85,7 +85,7 @@
 
                 // Get file name from html element
                 file = document.getElementById("load_game_file").files[0];
-                // define POST body
+                // Define POST body
                 data = {
                     "file_name": file.name
                 };
@@ -97,11 +97,13 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    // Process the response
                     board = data["board"];
                     loadBoard();
                     updateMessageBox("Save Loaded: move counter: " + data["move_count"])
                     updateMessageBox("it's " + data["player"] + "'s turn")
+                    if (data["player"] == "Light") {
+                        setTimeout(botMove(), 500)
+                    }
                 })
                 .catch((error) => {
                     console.error('Error:', error);
@@ -133,6 +135,40 @@
             };
         });
 
+        // Handle bot move
+        function botMove() {
+            /**
+            * GET request to handle the bot move 
+            */
+
+            fetch("/bot", {
+                method: 'GET',
+            })
+            .then(response => response.json())
+            .then(data => {
+                board = data["board"];
+                move = data["bot_move"];
+                console.log(move[0])
+                loadBoard();
+                updateMessageBox('Bot plays at (' + move[0] + ', ' + move[1] + ')');
+                updateMessageBox("It's " + data['player'] + "'s turn.");
+
+                if (data['finished']){
+                    //Game is finished
+                    //Update the board
+                    board = data['board'];
+                    //Reload the board
+                    loadBoard();
+                    document.getElementById('messageBox').innerHTML = data['finished'].toString();
+                    updateMessageBox("END");
+                    alert(data['finished'].toString())
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        };
+
         function sendMove(x, y, url) {
             /**
             * do a GET request to the server with the x and y coordinates for the move
@@ -150,12 +186,14 @@
                     updateMessageBox("It's " + data['player'] + "'s turn.");
                     //Update the board
                     board = data['board'];
-                    
+
                     //Reload the board
-                    loadBoard();}          
+                    loadBoard();
+
+                    // Play bot move
+                    setTimeout(botMove, 500)}
                 else if (data['status'] === 'fail'){
                     updateMessageBox('Invalid move at (' + x + ', ' + y + '): ' + data['message']);}
-
                 else if (data['finished']){
                     //Game is finished
                     //Update the board
@@ -164,7 +202,7 @@
                     loadBoard();
                     document.getElementById('messageBox').innerHTML = data['finished'].toString();
                     updateMessageBox("END");
-                    alert(data['finished'].toString());
+                    alert(data['finished'].toString())
                 }
             })
             .catch((error) => {

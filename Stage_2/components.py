@@ -1,4 +1,11 @@
+""" 
+Components Module:
+Provides useful functions for the othello game engine
+"""
+
 def initialise_board(size = 8):
+    """ Determine a starting board state given a size of board """
+
     board_state = []
     for y in range(size):
         row = []
@@ -20,27 +27,35 @@ def initialise_board(size = 8):
             else:
                 row.append("None ")
         board_state.append(row)
-    return board_state    
+    return board_state
 
 def print_board(board):
+    """ Output board state in a readable format """
+
     for row in board:
         for element in row:
             print(element, end = " ")
         print("\n")
 
 def check_match_in_direction(board, position, direction, colour, opposing_colour):
+    """ 
+        Determine whether when recursing over a 
+        given direction from a given position if 
+        there is a matching colour stone  
+    """
+
     x = position[0]
     y = position[1]
 
     if board[y][x] == colour:
         return True
 
-    # Check if moving one further and check if this takes you off the board, direction is less than -1 to account for case where stone is at the edge of the board 
+    # Check if moving one further and check if this takes you off the board,
     if x + direction[0] > len(board) - 1 or x + direction[0] < 0:
         return False
     if y + direction[1] > len(board) - 1 or y + direction[1] < 0:
         return False
-    
+
     if board[y][x] == "None ":
         return False
 
@@ -49,6 +64,11 @@ def check_match_in_direction(board, position, direction, colour, opposing_colour
 
 
 def check_adjacent(board, position, direction, colour, opposing_colour):
+    """ 
+    Check the adjacent stone to see if move can be legal 
+    (if adjacent stone is matching in colour or off the board move cannot be legal)  
+    """
+
     x = position[0]
     y = position[1]
 
@@ -69,12 +89,15 @@ def check_adjacent(board, position, direction, colour, opposing_colour):
         return False
 
     # Check for a match along the line
-    new_pos = (x + (2 * direction[0]), y + (2 * direction[1])) 
+    new_pos = (x + (2 * direction[0]), y + (2 * direction[1]))
     return check_match_in_direction(board, new_pos, direction, colour, opposing_colour)
 
 def check_outflanks(board, position, colour):
-    x = position[0]
-    y = position[1]
+    """ 
+    Check if a given move in a given board state
+    for a given colour results in any outflanks 
+    if so return the directions of outflanks and if they exist  
+    """
 
     # Determine opposing colour
     if colour == "Light":
@@ -82,26 +105,27 @@ def check_outflanks(board, position, colour):
     else:
         opposing_colour = "Light"
 
-    # Define directions of movement 
+    # Define directions of movement
     directions = [(1, 0), (0, 1), (-1, 0), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1)]
     valid_directions = []
 
     # Check each direction individually until a correct one is found
     for direction in directions:
-        direction_supports_move = check_adjacent(board, position, direction, colour, opposing_colour)
-        if direction_supports_move:
+        direction_support_move = check_adjacent(board, position, direction, colour, opposing_colour)
+        if direction_support_move:
             # Return direction for later use in game_engine.py(changing outflanked stones)
             valid_directions.append(direction)
 
     if len(valid_directions) > 0:
         return True, valid_directions
-    else:
-        return False, None
+
+    return False, None
 
 def legal_move(board, position, colour):
+    """ Check if a given move in a given board state for a given colour is legal  """
     x = position[0]
     y = position[1]
-    
+
     # Check position is unoccupied
     if board[y][x] != "None ":
         return False

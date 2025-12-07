@@ -1,56 +1,79 @@
+"""
+flask_game_engine module:.
+Sets up a flask server and handles all necessary boilerplate,
+defines a number of useful functions for engine purposes,
+handles all flask routes, managing routes for saving, loading, moves and bot
+runs game functionallity based on data from frontend.
+"""
+
 import os
 import json
 
 from flask import Flask, render_template, request, jsonify
-from components import *
+from components import initialise_board, legal_move, check_outflanks
 from othello_opponent import predict_move
 
 # Define some useful functions from game_engine.py
 def swap_player(current_player):
+    """ Takes a player. Dark or Light, and swaps them to the other player """
+
     if current_player == "Dark ":
         current_player = "Light"
     else:
         current_player = "Dark "
     return current_player
 
-def change_outflanked_stones(board, move, current_player, direction):
-    x = move[0]
-    y = move[1]
+def change_outflanked_stones(game_board, player_move, current_player, direction):
+    """ Based on a direction flips all stones which are outflanked """
 
+    x = player_move[0]
+    y = player_move[1]
+
+    # Move one in specified direction
     new_pos = (x + direction[0], y + direction[1])
 
-    if board[new_pos[1]][new_pos[0]] != current_player:
-        board[new_pos[1]][new_pos[0]] = current_player
-        change_outflanked_stones(board, new_pos, current_player, direction)
-    else:
-        return board
+    # Check if stone is same as player to stop recursing
+    if game_board[new_pos[1]][new_pos[0]] != current_player:
+        game_board[new_pos[1]][new_pos[0]] = current_player
+        change_outflanked_stones(game_board, new_pos, current_player, direction)
 
-def any_legal_moves(board, current_player):
+    return game_board
+
+def any_legal_moves(game_board, current_player):
+    """ Checks if any moves on the board are legal """
+
     move_available = False
-    for y in range(len(board)):
-        for x in range(len(board)):
-            if legal_move(board, (x, y), current_player):
+    # Iterate over every board position
+    for y in range(len(game_board)):
+        for x in range(len(game_board)):
+            if legal_move(game_board, (x, y), current_player):
                 move_available = True
                 break
 
     return move_available
 
-def check_score(board):
+def check_score(game_board):
+    """ Determine score of game based on a board state  """
+
     num_dark_stones = 0
     num_light_stones = 0
 
-    for row in board:
+    # Count number of each colour on the board
+    for row in game_board:
         num_dark_stones += row.count("Dark ")
         num_light_stones += row.count("Light")
 
+    # Determine winner
     if num_dark_stones > num_light_stones:
         winner = "Dark "
     elif num_light_stones >  num_dark_stones:
         winner = "Light"
     else:
         winner = "Draw"
+
     return winner, num_dark_stones, num_light_stones
 
+# Initialise the starting board
 board = initialise_board()
 
 # Define data for response object
@@ -65,47 +88,69 @@ data = {
 
 app = Flask(__name__)
 
-# Render template
 @app.route("/")
 def index():
+    """ Root endpoint, render template on page load """
     return render_template("index.html", game_board = board)
 
-# Save route
 @app.route("/save", methods = ["POST"])
 def save():
+    """
+    Save endpoint,
+    get save data,
+    check if save directory exists if not create it,
+    save data to a json file in save directory
+    """
+
+    # Get sava data
     save_data = request.get_json()
     save_dir = "othello_saves"
     files_in_dir = 0
 
+    # Add additional data to save data
     save_data["player"] = data["player"]
     save_data["move_count"] = data["move_count"]
 
+    # Make directory if it doesn't exist'
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
+    # Find number of files in save directory
     for path in os.listdir(save_dir):
         # check if current path is a file
         if os.path.isfile(os.path.join(save_dir, path)):
             files_in_dir += 1
+
+    # Create and write to file
     try:
-        with open(f"{save_dir}/save_{files_in_dir + 1}.json", "x") as f:
+        with open(f"{save_dir}/save_{files_in_dir + 1}.json", "x", encoding = "utf-8") as f:
             try:
                 json.dump(save_data, f)
                 return "success"
-            except:
+            except (IOError, OSError):
                 return "failed to write to the file"
-    except:
+    except (FileNotFoundError, PermissionError, OSError):
         return "failed to open file"
 
-# Load route
 @app.route("/load", methods = ["POST"])
 def load():
+    """
+    Load endpoint,
+    get save file name from frontend,
+    read save file,
+    change relevant variables,
+    respond with response data
+    """
+
     load_data_loc = request.get_json()
     save_dir = "othello_saves"
 
-    # retrieve save data
-    with open(f"{save_dir}/{load_data_loc["file_name"]}", "r") as f:
-        load_data = json.load(f)
+    # Retrieve save data
+    try:
+        with open(f"{save_dir}/{load_data_loc["file_name"]}", "r", encoding = "utf-8") as f:
+            load_data = json.load(f)
+    except (FileNotFoundError, PermissionError, OSError):
+        return "failed to open file"
 
     # Set variables for use in backend
     data["board"] = load_data["board"]
@@ -117,44 +162,52 @@ def load():
         "board": load_data["board"],
         "player": load_data["player"],
         "move_count": load_data["move_count"]
-                     }
+        }
 
     return jsonify(response_data)
 
-# Bot route
 @app.route("/bot", methods = ["GET"])
 def bot():
+    """ Bot endpoint, handles bot move following player move """
+
+    # Ensure player is light
     if data["player"] == "Light":
-        board = data["board"]
+        game_board = data["board"]
         data["finished"] = None
         current_player = data["player"]
         move_count = data["move_count"]
-        x, y = predict_move(board, "Light")
+        # Retrieve bot move
+        x, y = predict_move(game_board, "Light")
 
-        board[y][x] = "Light"
-        valid_directions = check_outflanks(board, (x, y), "Light")[1]
+        # Play move
+        game_board[y][x] = "Light"
+
+        # Change outflanked stones
+        valid_directions = check_outflanks(game_board, (x, y), "Light")[1]
         for direction in valid_directions:
-            change_outflanked_stones(board, (x, y), "Light", direction)
+            change_outflanked_stones(game_board, (x, y), "Light", direction)
         move_count -= 1
 
         # Check if the next player has any legal moves
-        if not any_legal_moves(board, swap_player(current_player)):
+        if not any_legal_moves(game_board, swap_player(current_player)):
             current_player = swap_player(current_player)
             # Check if the other player has any legal moves
-            if not any_legal_moves(board, current_player):
+            if not any_legal_moves(game_board, current_player):
                 data["status"] = "game over"
-                print("TEST")
+
                 # Determine game over output
                 winner, num_dark_stones, num_light_stones = check_score(board)
                 if winner == "Draw":
                     data["finished"] = f"Draw, {num_dark_stones} each"
                 else:
-                    data["finished"] = f"{winner} won, Dark: {num_dark_stones}, Light: {num_light_stones}"
+                    data["finished"] = f"""
+                    {winner} won, Dark:{num_dark_stones}, Light:{num_light_stones}
+                    """
 
                 current_player = "Dark "
                 move_count = 60
-                board = initialise_board(4)
-    
+                game_board = initialise_board()
+
         # Check if move count has expired
         if move_count == 0:
             data["status"] = "game over"
@@ -164,40 +217,42 @@ def bot():
             if winner == "Draw":
                 data["finished"] = f"Draw, {num_dark_stones} each"
             else:
-                data["finished"] = f"{winner} won, Dark: {num_dark_stones}, Light: {num_light_stones}"
+                data["finished"] = f"{winner} won, Dark:{num_dark_stones}, Light:{num_light_stones}"
 
             current_player = "Dark "
             move_count = 60
-            board = initialise_board(4)
+            game_board = initialise_board()
 
-        data["board"] = board
+        data["board"] = game_board
         data["move_count"] = move_count
         data["player"] = "Dark "
         data["bot_move"] = (x, y)
 
         return jsonify(data)
-    else:
-        return "No legal moves"
 
-# Move route
+    return "No legal moves"
+
 @app.route("/move", methods = ["GET"])
 def move():
+    """ Move endpoint, handles response to move data from frontend """
+
     x = int(request.args.get("x")) - 1
     y = int(request.args.get("y")) - 1
     current_player = data["player"]
     move_count = data["move_count"]
-    board = data["board"]
+    game_board = data["board"]
     data["status"] = "success"
     data["finished"] = None
 
-    if legal_move(board, (x, y), current_player):
+    if legal_move(game_board, (x, y), current_player):
         data["status"] = "success"
-        board[y][x] = current_player
+        # Play move
+        game_board[y][x] = current_player
 
         # Change outflanked stones
-        valid_directions = check_outflanks(board, (x, y), current_player)[1]
+        valid_directions = check_outflanks(game_board, (x, y), current_player)[1]
         for direction in valid_directions:
-            change_outflanked_stones(board, (x, y), current_player, direction)
+            change_outflanked_stones(game_board, (x, y), current_player, direction)
 
         move_count -= 1
         current_player = swap_player(current_player)
@@ -206,21 +261,21 @@ def move():
         data["message"] = "illegal move"
 
     # Check if the next player has any legal moves
-    if not any_legal_moves(board, current_player):
+    if not any_legal_moves(game_board, current_player):
         current_player = swap_player(current_player)
         # Check if the other player has any legal moves
-        if not any_legal_moves(board, current_player):
+        if not any_legal_moves(game_board, current_player):
             data["status"] = "game over"
             # Determine game over output
-            winner, num_dark_stones, num_light_stones = check_score(board)
+            winner, num_dark_stones, num_light_stones = check_score(game_board)
             if winner == "Draw":
                 data["finished"] = f"Draw, {num_dark_stones} each"
             else:
-                data["finished"] = f"{winner} won, Dark: {num_dark_stones}, Light: {num_light_stones}"
+                data["finished"] = f"{winner} won, Dark:{num_dark_stones}, Light:{num_light_stones}"
 
             current_player = "Dark "
             move_count = 60
-            board = initialise_board()
+            game_board = initialise_board()
 
     # Check if move count has expired
     if move_count == 0:
@@ -231,13 +286,13 @@ def move():
         if winner == "Draw":
             data["finished"] = f"Draw, {num_dark_stones} each"
         else:
-            data["finished"] = f"{winner} won, Dark: {num_dark_stones}, Light: {num_light_stones}"
+            data["finished"] = f"{winner} won, Dark:{num_dark_stones}, Light:{num_light_stones}"
 
         current_player = "Dark "
         move_count = 60
-        board = initialise_board(4)
+        game_board = initialise_board()
 
-    data["board"] = board
+    data["board"] = game_board
     data["player"] = current_player
     data["move_count"] = move_count
 
